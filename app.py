@@ -100,17 +100,35 @@ def display_probability_bar(p_home, p_away, height=18):
 
 def display_r32_match_row(match_num, team_a, team_b, df, elo_dict):
     st.markdown(f"#### 🏟️ Match {match_num}")
+    
+    # 1. Scan for an official winner
     winner = get_official_winner(team_a, team_b, df)
     
     if winner:
-        loser = team_b if winner == team_a else team_a
-        st.success(f"**{winner} vs {loser}**")
-        st.markdown(f"🏁 **Result:** **{winner}** advances to the next round!")
+        # 2. Extract the exact match row from the data to pull scores
+        match_row = df[
+            (df['tournament'] == 'FIFA World Cup') & 
+            (df['date'] >= '2026-06-20') &  
+            (((df['home_team'] == team_a) & (df['away_team'] == team_b)) | 
+             ((df['home_team'] == team_b) & (df['away_team'] == team_a)))
+        ].iloc[-1]
+        
+        # Keep original team placement order for the matchup header
+        st.markdown(f"**{team_a} vs {team_b}**")
+        
+        # 3. Format and display the explicit scoreline line
+        st.success(
+            f"🏁 **Result:** {match_row['home_team']} {int(match_row['home_score'])} - "
+            f"{int(match_row['away_score'])} {match_row['away_team']}\n\n"
+            f"**{winner}** advances to the next round!"
+        )
     else:
+        # Fallback projection layout for unplayed matchups
         p_a, p_b = predict_match_analytics(team_a, team_b, elo_dict)
         st.markdown(f"**{team_a} vs {team_b}**")
         st.write(f"📊 {team_a}: **{p_a}%** | {team_b}: **{p_b}%**")
         display_probability_bar(p_a, p_b)
+        
     st.markdown("---")
 
 # 3. INTERACTIVE PROCESSOR LAYER
