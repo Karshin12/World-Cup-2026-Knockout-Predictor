@@ -14,70 +14,74 @@ st.markdown("---")
 
 # 2. DATA INGESTION
 
-# ==========================================
-# 2. DATA INGESTION & ROBUST DATE CLEANING
-# ==========================================
-
 @st.cache_data(ttl=60)
 def load_and_train_analytics_engine():
     try:
-        raw_url = "https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/results.csv"
-        df = pd.read_csv(raw_url)
+        # Base results dataset
+        raw_results_url = "https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/results.csv"
+        df = pd.read_csv(raw_results_url)
+     
+        shootout_df = None
+        try:
+            raw_shootouts_url = "https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/shootouts.csv"
+            shootout_df = pd.read_csv(raw_shootouts_url)
+            shootout_df['date'] = pd.to_datetime(shootout_df['date'], format='mixed', errors='coerce')
+            shootout_df['home_team'] = shootout_df['home_team'].astype(str).str.strip()
+            shootout_df['away_team'] = shootout_df['away_team'].astype(str).str.strip()
+            shootout_df['winner'] = shootout_df['winner'].astype(str).str.strip()
+        except Exception:
+            pass # Keep rolling if shootouts file hasn't been created yet
 
         df['date'] = df['date'].astype(str).str.strip()
         df['date'] = pd.to_datetime(df['date'], format='mixed', errors='coerce')
         df = df.dropna(subset=['date'])
-
+        
         df['home_team'] = df['home_team'].astype(str).str.strip()
         df['away_team'] = df['away_team'].astype(str).str.strip()
         df['tournament'] = df['tournament'].astype(str).str.strip()
-
+        
         name_mappings = {
-            "United States": "USA",
-            "Cabo Verde": "Cape Verde",
-            "Congo DR": "DR Congo",
-            "DR Congo": "DR Congo"
+            "United States": "USA", "Cabo Verde": "Cape Verde",
+            "Congo DR": "DR Congo", "DR Congo": "DR Congo"
         }
         df['home_team'] = df['home_team'].replace(name_mappings)
         df['away_team'] = df['away_team'].replace(name_mappings)
-    
+        
+        if shootout_df is not None:
+            shootout_df['home_team'] = shootout_df['home_team'].replace(name_mappings)
+            shootout_df['away_team'] = shootout_df['away_team'].replace(name_mappings)
+            shootout_df['winner'] = shootout_df['winner'].replace(name_mappings)
+            
         df = df.sort_values('date').reset_index(drop=True)
         
+        # --- TRAIN ELO RATINGS ---
         elo_ratings = {}
         k_factor = 32
-        
         for _, row in df.iterrows():
             h_team = row['home_team']
             a_team = row['away_team']
-            
             if h_team not in elo_ratings: elo_ratings[h_team] = 1500.0
             if a_team not in elo_ratings: elo_ratings[a_team] = 1500.0
             
-            r_h = elo_ratings[h_team]
-            r_a = elo_ratings[a_team]
-            
+            r_h, r_a = elo_ratings[h_team], elo_ratings[a_team]
             exp_h = 1 / (1 + 10 ** ((r_a - r_h) / 400))
-            exp_a = 1 - exp_h
-
-            if row['home_score'] > row['away_score']:
-                act_h, act_a = 1.0, 0.0
-            elif row['away_score'] > row['home_score']:
-                act_h, act_a = 0.0, 1.0
-            else:
-                act_h, act_a = 0.5, 0.5
-
-            elo_ratings[h_team] += k_factor * (act_h - exp_h)
-            elo_ratings[a_team] += k_factor * (act_a - exp_a)
             
-        return df, elo_ratings
+            # Football Elo rule: matches decided via PKs are officially rated as draws (0.5)
+            if row['home_score'] > row['away_score']: act_h = 1.0
+            elif row['away_score'] > row['home_score']: act_h = 0.0
+            else: act_h = 0.5
+                
+            elo_ratings[h_team] += k_factor * (act_h - exp_h)
+            elo_ratings[a_team] += k_factor * (1 - act_h - (1 - exp_h))
+            
+        return df, elo_ratings, shootout_df
     except Exception as e:
-        st.error(f"Analytics Pipeline Initialization Error: {e}")
-        return None, None
-
+        st.error(f"Analytics Pipeline Error: {e}")
+        return None, None, None
+        
 raw_data, master_elo = load_and_train_analytics_engine()
 
-def get_official_winner(team_a, team_b, df):
-    """Scans repository logs for a completed 2026 World Cup tournament outcome."""
+def get_official_winner(team_a, team_b, df, shootout_df=None):
     if df is None: return None
     match = df[
         (df['tournament'] == 'FIFA World Cup') & 
@@ -87,10 +91,20 @@ def get_official_winner(team_a, team_b, df):
     ]
     if not match.empty:
         latest = match.iloc[-1]
+        
         if latest['home_score'] > latest['away_score']: return latest['home_team']
         elif latest['away_score'] > latest['home_score']: return latest['away_team']
-    return None
 
+        if latest['home_score'] == latest['away_score'] and shootout_df is not None:
+            so_match = shootout_df[
+                (((shootout_df['home_team'] == team_a) & (shootout_df['away_team'] == team_b)) | 
+                 ((shootout_df['home_team'] == team_b) & (shootout_df['away_team'] == team_a)))
+            ]
+            if not so_match.empty:
+                return so_match.iloc[-1]['winner']
+                
+    return None
+    
 def predict_match_analytics(team_a, team_b, elo_dict):
     """
     Industry-Level Logistic Projections using learned features.
