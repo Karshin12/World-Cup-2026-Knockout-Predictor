@@ -19,7 +19,7 @@ Unlike basic prediction models that rely on static, unweighted goal averages, th
 * Fully functional dynamic routing tracking consolation bracket paths alongside the main championship line.
 
 
-## Technology Stack
+## Tech Stack
 
 * **Language:** Python 3.9+
 * **Framework:** Streamlit (Dynamic Web UI)
