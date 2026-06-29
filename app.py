@@ -14,18 +14,22 @@ st.markdown("---")
 
 # 2. DATA INGESTION
 
+# ==========================================
+# 2. DATA INGESTION & ROBUST DATE CLEANING
+# ==========================================
+
 @st.cache_data(ttl=60)
 def load_and_train_analytics_engine():
     try:
         raw_url = "https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/results.csv"
         df = pd.read_csv(raw_url)
-        df['date'] = df['data'].astype(str).str.strip()
-        df['data'] = pd.to_datetime(df['date'], format='mixed', errors='coerce')
+
+        df['date'] = df['date'].astype(str).str.strip()
+        df['date'] = pd.to_datetime(df['date'], format='mixed', errors='coerce')
         df = df.dropna(subset=['date'])
 
         df['home_team'] = df['home_team'].astype(str).str.strip()
         df['away_team'] = df['away_team'].astype(str).str.strip()
-
         df['tournament'] = df['tournament'].astype(str).str.strip()
 
         name_mappings = {
