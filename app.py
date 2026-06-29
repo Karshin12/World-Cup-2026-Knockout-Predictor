@@ -17,7 +17,7 @@ st.markdown("---")
 @st.cache_data(ttl=60)
 def load_and_train_analytics_engine():
     try:
-        raw_url = "https://raw.githubusercontent.com/martj42/international_results/master/results.csv"
+        raw_url = "https://github.com/Karshin12/World-Cup-2026-Knockout-Predictor/blob/main/results.csv"
         df = pd.read_csv(raw_url)
         df['date'] = pd.to_datetime(df['date'])
         
