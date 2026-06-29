@@ -17,10 +17,15 @@ st.markdown("---")
 @st.cache_data(ttl=60)
 def load_and_train_analytics_engine():
     try:
-        raw_url = "https://github.com/Karshin12/World-Cup-2026-Knockout-Predictor/blob/main/results.csv"
+        raw_url = "https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/results.csv"
         df = pd.read_csv(raw_url)
-        df['date'] = pd.to_datetime(df['date'])
         
+        df['date'] = df['date'].astype(str).str.strip()
+
+        df['date'] = pd.to_datetime(df['date'], errors='coerce')
+
+        df = df.dropna(subset=['date'])
+  
         df['home_team'] = df['home_team'].replace({"United States": "USA", "Cabo Verde": "Cape Verde"})
         df['away_team'] = df['away_team'].replace({"United States": "USA", "Cabo Verde": "Cape Verde"})
     
