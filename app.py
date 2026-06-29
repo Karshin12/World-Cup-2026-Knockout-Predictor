@@ -132,7 +132,7 @@ def display_probability_bar(p_home, p_away, height=18):
 # Pass shootout_df into the match row handler
 def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=None):
     st.markdown(f"#### 🏟️ Match {match_num}")
-
+    
     winner = get_official_winner(team_a, team_b, df, shootout_df)
     
     if winner:
@@ -144,11 +144,18 @@ def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=N
         ].iloc[-1]
         
         st.markdown(f"**{team_a} vs {team_b}**")
-
+        
+        # 3. If the game was settled on penalties, explicitly add a "(P)" badge next to the winner
+        if int(match_row['home_score']) == int(match_row['away_score']):
+            winner_display = f"{winner} (P)"
+        else:
+            winner_display = winner
+            
+        # 4. Format and display the explicit scoreline line
         st.success(
             f"🏁 **Result:** {match_row['home_team']} {int(match_row['home_score'])} - "
             f"{int(match_row['away_score'])} {match_row['away_team']}\n\n"
-            f"**{winner}** advances to the next round!"
+            f"**{winner_display}** advances to the next round!"
         )
     else:
         # Fallback projection layout for unplayed matchups
@@ -158,7 +165,6 @@ def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=N
         display_probability_bar(p_a, p_b)
         
     st.markdown("---")
-
 # 3. INTERACTIVE PROCESSOR LAYER
 
 if raw_data is not None and master_elo is not None:
@@ -168,22 +174,22 @@ if raw_data is not None and master_elo is not None:
     st.header("Round of 32 Projections")
     st.markdown("---")
 
-    display_r32_match_row(73, "South Africa", "Canada", raw_data, master_elo)
-    display_r32_match_row(74, "Brazil", "Japan", raw_data, master_elo)
-    display_r32_match_row(75, "Germany", "Paraguay", raw_data, master_elo)
-    display_r32_match_row(76, "Netherlands", "Morocco", raw_data, master_elo)
-    display_r32_match_row(77, "Ivory Coast", "Norway", raw_data, master_elo)
-    display_r32_match_row(78, "France", "Sweden", raw_data, master_elo)
-    display_r32_match_row(79, "Mexico", "Ecuador", raw_data, master_elo)
-    display_r32_match_row(80, "England", "DR Congo", raw_data, master_elo)
-    display_r32_match_row(81, "Belgium", "Senegal", raw_data, master_elo)
-    display_r32_match_row(82, "USA", "Bosnia and Herzegovina", raw_data, master_elo)
-    display_r32_match_row(83, "Spain", "Austria", raw_data, master_elo)
-    display_r32_match_row(84, "Portugal", "Croatia", raw_data, master_elo)
-    display_r32_match_row(85, "Switzerland", "Algeria", raw_data, master_elo)
-    display_r32_match_row(86, "Australia", "Egypt", raw_data, master_elo)
-    display_r32_match_row(87, "Argentina", "Cape Verde", raw_data, master_elo)
-    display_r32_match_row(88, "Colombia", "Ghana", raw_data, master_elo)
+    display_r32_match_row(73, "South Africa", "Canada", raw_data, master_elo, shootout_data)
+    display_r32_match_row(74, "Brazil", "Japan", raw_data, master_elo, shootout_data)
+    display_r32_match_row(75, "Germany", "Paraguay", raw_data, master_elo, shootout_data)
+    display_r32_match_row(76, "Netherlands", "Morocco", raw_data, master_elo, shootout_data)
+    display_r32_match_row(77, "Ivory Coast", "Norway", raw_data, master_elo, shootout_data)
+    display_r32_match_row(78, "France", "Sweden", raw_data, master_elo, shootout_data)
+    display_r32_match_row(79, "Mexico", "Ecuador", raw_data, master_elo, shootout_data)
+    display_r32_match_row(80, "England", "DR Congo", raw_data, master_elo, shootout_data)
+    display_r32_match_row(81, "Belgium", "Senegal", raw_data, master_elo, shootout_data)
+    display_r32_match_row(82, "USA", "Bosnia and Herzegovina", raw_data, master_elo, shootout_data)
+    display_r32_match_row(83, "Spain", "Austria", raw_data, master_elo, shootout_data)
+    display_r32_match_row(84, "Portugal", "Croatia", raw_data, master_elo, shootout_data)
+    display_r32_match_row(85, "Switzerland", "Algeria", raw_data, master_elo, shootout_data)
+    display_r32_match_row(86, "Australia", "Egypt", raw_data, master_elo, shootout_data)
+    display_r32_match_row(87, "Argentina", "Cape Verde", raw_data, master_elo, shootout_data)
+    display_r32_match_row(88, "Colombia", "Ghana", raw_data, master_elo, shootout_data)
 
     # STAGE 2: ROUND OF 16 CONFIGURATION
     
