@@ -79,7 +79,7 @@ def load_and_train_analytics_engine():
         st.error(f"Analytics Pipeline Error: {e}")
         return None, None, None
         
-raw_data, master_elo = load_and_train_analytics_engine()
+raw_data, master_elo, shootout_data = load_and_train_analytics_engine()
 
 def get_official_winner(team_a, team_b, df, shootout_df=None):
     if df is None: return None
