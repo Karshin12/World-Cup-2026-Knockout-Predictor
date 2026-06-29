@@ -19,15 +19,24 @@ def load_and_train_analytics_engine():
     try:
         raw_url = "https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/results.csv"
         df = pd.read_csv(raw_url)
+        df['date'] = pd.to_datetime(df['date'])
         
-        df['date'] = df['date'].astype(str).str.strip()
-
-        df['date'] = pd.to_datetime(df['date'], errors='coerce')
-
-        df = df.dropna(subset=['date'])
-  
-        df['home_team'] = df['home_team'].replace({"United States": "USA", "Cabo Verde": "Cape Verde"})
-        df['away_team'] = df['away_team'].replace({"United States": "USA", "Cabo Verde": "Cape Verde"})
+        # 1. Clean up potential white spaces or accidental case mismatches dynamically
+        df['home_team'] = df['home_team'].astype(str).str.strip()
+        df['away_team'] = df['away_team'].astype(str).str.strip()
+        
+        # 2. Standardize tournament names to capture your custom additions
+        df['tournament'] = df['tournament'].astype(str).str.strip()
+        
+        # 3. Explicit Name Mapping Layer to match your bracket text strings exactly
+        name_mappings = {
+            "United States": "USA",
+            "Cabo Verde": "Cape Verde",
+            "Congo DR": "DR Congo",
+            "DR Congo": "DR Congo"
+        }
+        df['home_team'] = df['home_team'].replace(name_mappings)
+        df['away_team'] = df['away_team'].replace(name_mappings)
     
         df = df.sort_values('date').reset_index(drop=True)
         
