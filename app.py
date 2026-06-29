@@ -129,14 +129,13 @@ def display_probability_bar(p_home, p_away, height=18):
     </div>
     """, unsafe_allow_html=True)
 
-def display_r32_match_row(match_num, team_a, team_b, df, elo_dict):
+# Pass shootout_df into the match row handler
+def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=None):
     st.markdown(f"#### 🏟️ Match {match_num}")
-    
-    # 1. Scan for an official winner
-    winner = get_official_winner(team_a, team_b, df)
+
+    winner = get_official_winner(team_a, team_b, df, shootout_df)
     
     if winner:
-        # 2. Extract the exact match row from the data to pull scores
         match_row = df[
             (df['tournament'] == 'FIFA World Cup') & 
             (df['date'] >= '2026-06-20') &  
@@ -144,10 +143,8 @@ def display_r32_match_row(match_num, team_a, team_b, df, elo_dict):
              ((df['home_team'] == team_b) & (df['away_team'] == team_a)))
         ].iloc[-1]
         
-        # Keep original team placement order for the matchup header
         st.markdown(f"**{team_a} vs {team_b}**")
-        
-        # 3. Format and display the explicit scoreline line
+
         st.success(
             f"🏁 **Result:** {match_row['home_team']} {int(match_row['home_score'])} - "
             f"{int(match_row['away_score'])} {match_row['away_team']}\n\n"
