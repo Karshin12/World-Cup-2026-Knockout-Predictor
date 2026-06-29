@@ -147,7 +147,7 @@ def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=N
         
         # 3. If the game was settled on penalties, explicitly add a "(P)" badge next to the winner
         if int(match_row['home_score']) == int(match_row['away_score']):
-            winner_display = f"{winner} (P)"
+            winner_display = f"{winner} (on penalties)"
         else:
             winner_display = winner
             
