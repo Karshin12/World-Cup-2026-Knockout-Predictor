@@ -168,7 +168,7 @@ def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=N
                         pk_home = int(so_row['away_pk_score'])
                         pk_away = int(so_row['home_pk_score'])
                         
-                    score_text += f" [{pk_home}-{pk_away} on pens]"
+                    score_text += f" [{pk_home} - {pk_away} on pens]"
             
         # Format and display the unified scoreboard
         st.success(
