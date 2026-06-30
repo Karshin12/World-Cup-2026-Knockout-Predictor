@@ -200,11 +200,11 @@ if raw_data is not None and master_elo is not None:
 
     # Match A
     st.markdown("### Round of 16: Match A")
-    w73 = get_official_winner("South Africa", "Canada", raw_data)
+    w73 = get_official_winner("South Africa", "Canada", raw_data, shootout_data)
     if w73: t1_a = st.selectbox("Advanced from South Africa vs Canada:", options=[w73], key="r16_a_a_locked")
     else: t1_a = st.selectbox("Who advances from South Africa vs Canada?", options=["South Africa", "Canada"], index=1, key="r16_a_a_open")
         
-    w74 = get_official_winner("Brazil", "Japan", raw_data)
+    w74 = get_official_winner("Brazil", "Japan", raw_data, shootout_data)
     if w74: t1_b = st.selectbox("Advanced from Brazil vs Japan:", options=[w74], key="r16_a_b_locked")
     else: t1_b = st.selectbox("Who advances from Brazil vs Japan?", options=["Brazil", "Japan"], key="r16_a_b_open")
         
@@ -216,11 +216,11 @@ if raw_data is not None and master_elo is not None:
 
     # Match B
     st.markdown("### Round of 16: Match B")
-    w75 = get_official_winner("Germany", "Paraguay", raw_data)
+    w75 = get_official_winner("Germany", "Paraguay", raw_data, shootout_data)
     if w75: t2_a = st.selectbox("Advanced from Germany vs Paraguay:", options=[w75], key="r16_b_a_locked")
     else: t2_a = st.selectbox("Who advances from Germany vs Paraguay?", options=["Germany", "Paraguay"], key="r16_b_a_open")
         
-    w76 = get_official_winner("Netherlands", "Morocco", raw_data)
+    w76 = get_official_winner("Netherlands", "Morocco", raw_data, shootout_data)
     if w76: t2_b = st.selectbox("Advanced from Netherlands vs Morocco:", options=[w76], key="r16_b_b_locked")
     else: t2_b = st.selectbox("Who advances from Netherlands vs Morocco?", options=["Netherlands", "Morocco"], key="r16_b_b_open")
         
@@ -232,11 +232,11 @@ if raw_data is not None and master_elo is not None:
 
     # Match C
     st.markdown("### Round of 16: Match C")
-    w77 = get_official_winner("Ivory Coast", "Norway", raw_data)
+    w77 = get_official_winner("Ivory Coast", "Norway", raw_data, shootout_data)
     if w77: t3_a = st.selectbox("Advanced from Ivory Coast vs Norway:", options=[w77], key="r16_c_a_locked")
     else: t3_a = st.selectbox("Who advances from Ivory Coast vs Norway?", options=["Ivory Coast", "Norway"], key="r16_c_a_open")
         
-    w78 = get_official_winner("France", "Sweden", raw_data)
+    w78 = get_official_winner("France", "Sweden", raw_data, shootout_data)
     if w78: t3_b = st.selectbox("Advanced from France vs Sweden:", options=[w78], key="r16_c_b_locked")
     else: t3_b = st.selectbox("Who advances from France vs Sweden?", options=["France", "Sweden"], key="ro16_c_b_open")
         
@@ -248,11 +248,11 @@ if raw_data is not None and master_elo is not None:
 
     # Match D
     st.markdown("### Round of 16: Match D")
-    w79 = get_official_winner("Mexico", "Ecuador", raw_data)
+    w79 = get_official_winner("Mexico", "Ecuador", raw_data, shootout_data)
     if w79: t4_a = st.selectbox("Advanced from Mexico vs Ecuador:", options=[w79], key="r16_d_a_locked")
     else: t4_a = st.selectbox("Who advances from Mexico vs Ecuador?", options=["Mexico", "Ecuador"], key="r16_d_a_open")
         
-    w80 = get_official_winner("England", "DR Congo", raw_data)
+    w80 = get_official_winner("England", "DR Congo", raw_data, shootout_data)
     if w80: t4_b = st.selectbox("Advanced from England vs DR Congo:", options=[w80], key="r16_d_b_locked")
     else: t4_b = st.selectbox("Who advances from England vs DR Congo?", options=["England", "DR Congo"], key="r16_d_b_open")
         
@@ -264,11 +264,11 @@ if raw_data is not None and master_elo is not None:
 
     # Match E
     st.markdown("### Round of 16: Match E")
-    w81 = get_official_winner("Belgium", "Senegal", raw_data)
+    w81 = get_official_winner("Belgium", "Senegal", raw_data, shootout_data)
     if w81: t5_a = st.selectbox("Advanced from Belgium vs Senegal:", options=[w81], key="r16_e_a_locked")
     else: t5_a = st.selectbox("Who advances from Belgium vs Senegal?", options=["Belgium", "Senegal"], key="r16_e_a_open")
         
-    w82 = get_official_winner("USA", "Bosnia and Herzegovina", raw_data)
+    w82 = get_official_winner("USA", "Bosnia and Herzegovina", raw_data, shootout_data)
     if w82: t5_b = st.selectbox("Advanced from USA vs Bosnia and Herzegovina:", options=[w82], key="r16_e_b_locked")
     else: t5_b = st.selectbox("Who advances from USA vs Bosnia and Herzegovina?", options=["USA", "Bosnia and Herzegovina"], key="r16_e_b_open")
         
@@ -280,11 +280,11 @@ if raw_data is not None and master_elo is not None:
 
     # Match F
     st.markdown("### Round of 16: Match F")
-    w83 = get_official_winner("Spain", "Austria", raw_data)
+    w83 = get_official_winner("Spain", "Austria", raw_data, shootout_data)
     if w83: t6_a = st.selectbox("Advanced from Spain vs Austria:", options=[w83], key="r16_f_a_locked")
     else: t6_a = st.selectbox("Who advances from Spain vs Austria?", options=["Spain", "Austria"], key="r16_f_a_open")
         
-    w84 = get_official_winner("Portugal", "Croatia", raw_data)
+    w84 = get_official_winner("Portugal", "Croatia", raw_data, shootout_data)
     if w84: t6_b = st.selectbox("Advanced from Portugal vs Croatia:", options=[w84], key="r16_f_b_locked")
     else: t6_b = st.selectbox("Who advances from Portugal vs Croatia?", options=["Portugal", "Croatia"], key="r16_f_b_open")
         
@@ -296,11 +296,11 @@ if raw_data is not None and master_elo is not None:
 
     # Match G
     st.markdown("### Round of 16: Match G")
-    w85 = get_official_winner("Switzerland", "Algeria", raw_data)
+    w85 = get_official_winner("Switzerland", "Algeria", raw_data, shootout_data)
     if w85: t7_a = st.selectbox("Advanced from Switzerland vs Algeria:", options=[w85], key="r16_g_a_locked")
     else: t7_a = st.selectbox("Who advances from Switzerland vs Algeria?", options=["Switzerland", "Algeria"], key="r16_g_a_open")
         
-    w86 = get_official_winner("Australia", "Egypt", raw_data)
+    w86 = get_official_winner("Australia", "Egypt", raw_data, shootout_data)
     if w86: t7_b = st.selectbox("Advanced from Australia vs Egypt:", options=[w86], key="r16_g_b_locked")
     else: t7_b = st.selectbox("Who advances from Australia vs Egypt?", options=["Australia", "Egypt"], key="r16_g_b_open")
         
@@ -312,11 +312,11 @@ if raw_data is not None and master_elo is not None:
 
     # Match H
     st.markdown("### Round of 16: Match H")
-    w87 = get_official_winner("Argentina", "Cape Verde", raw_data)
+    w87 = get_official_winner("Argentina", "Cape Verde", raw_data, shootout_data)
     if w87: t8_a = st.selectbox("Advanced from Argentina vs Cape Verde:", options=[w87], key="r16_h_a_locked")
     else: t8_a = st.selectbox("Who advances from Argentina vs Cape Verde?", options=["Argentina", "Cape Verde"], key="r16_h_a_open")
         
-    w88 = get_official_winner("Colombia", "Ghana", raw_data)
+    w88 = get_official_winner("Colombia", "Ghana", raw_data, shootout_data)
     if w88: t8_b = st.selectbox("Advanced from Colombia vs Ghana:", options=[w88], key="r16_h_b_locked")
     else: t8_b = st.selectbox("Who advances from Colombia vs Ghana?", options=["Colombia", "Ghana"], key="r16_h_b_open")
         
@@ -335,7 +335,7 @@ if raw_data is not None and master_elo is not None:
     q1_a = r16_picks["ma_w"]
     q1_b = r16_picks["mb_w"]
     
-    w89 = get_official_winner(q1_a, q1_b, raw_data)
+    w89 = get_official_winner(q1_a, q1_b, raw_data, shootout_data)
     if w89: q1_winner = st.selectbox(f"Advanced from {q1_a} vs {q1_b}:", options=[w89], key="q1_locked")
     else: q1_winner = st.selectbox(f"Who advances from {q1_a} vs {q1_b}?", options=[q1_a, q1_b], key="q1_select")
         
@@ -349,7 +349,7 @@ if raw_data is not None and master_elo is not None:
     q2_a = r16_picks["mc_w"]
     q2_b = r16_picks["md_w"]
     
-    w90 = get_official_winner(q2_a, q2_b, raw_data)
+    w90 = get_official_winner(q2_a, q2_b, raw_data, shootout_data)
     if w90: q2_winner = st.selectbox(f"Advanced from {q2_a} vs {q2_b}:", options=[w90], key="q2_locked")
     else: q2_winner = st.selectbox(f"Who advances from {q2_a} vs {q2_b}?", options=[q2_a, q2_b], key="q2_select")
         
@@ -363,7 +363,7 @@ if raw_data is not None and master_elo is not None:
     q3_a = r16_picks["me_w"]
     q3_b = r16_picks["mf_w"]
     
-    w91 = get_official_winner(q3_a, q3_b, raw_data)
+    w91 = get_official_winner(q3_a, q3_b, raw_data, shootout_data)
     if w91: q3_winner = st.selectbox(f"Advanced from {q3_a} vs {q3_b}:", options=[w91], key="q3_locked")
     else: q3_winner = st.selectbox(f"Who advances from {q3_a} vs {q3_b}?", options=[q3_a, q3_b], key="q3_select")
         
@@ -377,7 +377,7 @@ if raw_data is not None and master_elo is not None:
     q4_a = r16_picks["mg_w"]
     q4_b = r16_picks["mh_w"]
     
-    w92 = get_official_winner(q4_a, q4_b, raw_data)
+    w92 = get_official_winner(q4_a, q4_b, raw_data, shootout_data)
     if w92: q4_winner = st.selectbox(f"Advanced from {q4_a} vs {q4_b}:", options=[w92], key="q4_locked")
     else: q4_winner = st.selectbox(f"Who advances from {q4_a} vs {q4_b}?", options=[q4_a, q4_b], key="q4_select")
         
@@ -392,7 +392,7 @@ if raw_data is not None and master_elo is not None:
 
     # --- Semifinal 1 ---
     st.markdown("### Semifinal 1")
-    w93 = get_official_winner(q1_winner, q2_winner, raw_data)
+    w93 = get_official_winner(q1_winner, q2_winner, raw_data, shootout_data)
     if w93: f_a = st.selectbox(f"Advanced from Semifinal 1:", options=[w93], key="sf1_locked")
     else: f_a = st.selectbox("Who advances to the Grand Final?", options=[q1_winner, q2_winner], key="sf1_select")
         
@@ -403,7 +403,7 @@ if raw_data is not None and master_elo is not None:
 
     # --- Semifinal 2 ---
     st.markdown("### Semifinal 2")
-    w94 = get_official_winner(q3_winner, q4_winner, raw_data)
+    w94 = get_official_winner(q3_winner, q4_winner, raw_data, shootout_data)
     if w94: f_b = st.selectbox(f"Advanced from Semifinal 2:", options=[w94], key="sf2_locked")
     else: f_b = st.selectbox("Who advances to the Grand Final?", options=[q3_winner, q4_winner], key="sf2_select")
         
@@ -417,7 +417,7 @@ if raw_data is not None and master_elo is not None:
     sf1_loser = q2_winner if f_a == q1_winner else q1_winner
     sf2_loser = q4_winner if f_b == q3_winner else q3_winner
     
-    w95 = get_official_winner(sf1_loser, sf2_loser, raw_data)
+    w95 = get_official_winner(sf1_loser, sf2_loser, raw_data, shootout_data)
     if w95: bronze_winner = st.selectbox(f"Advanced from Third Place Playoff:", options=[w95], key="tp_locked")
     else: bronze_winner = st.selectbox(f"Who wins the Third Place Playoff?", options=[sf1_loser, sf2_loser], key="tp_select")
         
