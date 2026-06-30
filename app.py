@@ -145,20 +145,37 @@ def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=N
         
         st.markdown(f"**{team_a} vs {team_b}**")
         
-        # 3. If the game was settled on penalties, explicitly add a "(P)" badge next to the winner
+        # Base regulation score display text
+        score_text = f"{match_row['home_team']} {int(match_row['home_score'])} - {int(match_row['away_score'])} {match_row['away_team']}"
+        winner_display = winner
+        
+        # If the game was a draw, look for penalty scores inside shootout_df
         if int(match_row['home_score']) == int(match_row['away_score']):
             winner_display = f"{winner} (on penalties)"
-        else:
-            winner_display = winner
             
-        # 4. Format and display the explicit scoreline line
+            if shootout_df is not None:
+                so_match = shootout_df[
+                    (((shootout_df['home_team'] == team_a) & (shootout_df['away_team'] == team_b)) | 
+                     ((shootout_df['home_team'] == team_b) & (shootout_df['away_team'] == team_a)))
+                ]
+                if not so_match.empty:
+                    so_row = so_match.iloc[-1]
+                    # Dynamically look up who was home vs away to align the penalty score layout
+                    if so_row['home_team'] == match_row['home_team']:
+                        pk_home = int(so_row['home_pk_score'])
+                        pk_away = int(so_row['away_pk_score'])
+                    else:
+                        pk_home = int(so_row['away_pk_score'])
+                        pk_away = int(so_row['home_pk_score'])
+                        
+                    score_text += f" [{pk_home}-{pk_away} on pens]"
+            
+        # Format and display the unified scoreboard
         st.success(
-            f"🏁 **Result:** {match_row['home_team']} {int(match_row['home_score'])} - "
-            f"{int(match_row['away_score'])} {match_row['away_team']}\n\n"
+            f"🏁 **Result:** {score_text}\n\n"
             f"**{winner_display}** advances to the next round!"
         )
     else:
-        # Fallback projection layout for unplayed matchups
         p_a, p_b = predict_match_analytics(team_a, team_b, elo_dict)
         st.markdown(f"**{team_a} vs {team_b}**")
         st.write(f"📊 {team_a}: **{p_a}%** | {team_b}: **{p_b}%**")
