@@ -85,6 +85,7 @@ raw_data, master_elo, shootout_data = load_and_train_analytics_engine()
 
 def get_official_winner(team_a, team_b, df, shootout_df=None):
     if df is None: return None
+    knockout_start = pd.to_datetime('2026-06-20')
     match = df[
         (df['tournament'] == 'FIFA World Cup') & 
         (df['date'] >= '2026-06-20') &  
