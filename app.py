@@ -17,6 +17,8 @@ st.markdown("---")
 @st.cache_data(ttl=60)
 def load_and_train_analytics_engine():
     try:
+        import time
+        cache_buster = f"?v={int(time.time())}"
         # Base results dataset
         raw_results_url = "https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/results.csv"
         df = pd.read_csv(raw_results_url)
