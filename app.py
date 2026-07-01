@@ -12,9 +12,7 @@ st.markdown("<h1 style='font-size: 2.5rem; white-space: nowrap;'>FIFA World Cup 
 st.markdown("##### Real-Time Knockout Analytics Powered by Live Tournament Data")
 st.markdown("---")
 
-# ==========================================
-# 2. DATA INGESTION & ROBUST SEPARATION
-# ==========================================
+# 2. DATA INGESTION
 
 @st.cache_data(ttl=60)
 def load_and_train_analytics_engine():
