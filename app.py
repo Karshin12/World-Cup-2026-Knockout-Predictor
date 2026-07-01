@@ -12,7 +12,9 @@ st.markdown("<h1 style='font-size: 2.5rem; white-space: nowrap;'>FIFA World Cup 
 st.markdown("##### Real-Time Knockout Analytics Powered by Live Tournament Data")
 st.markdown("---")
 
-# 2. DATA INGESTION
+# ==========================================
+# 2. DATA INGESTION & ROBUST SEPARATION
+# ==========================================
 
 @st.cache_data(ttl=60)
 def load_and_train_analytics_engine():
@@ -20,7 +22,6 @@ def load_and_train_analytics_engine():
         import time
         cache_buster = f"?v={int(time.time())}"
         
-        # Base results dataset
         raw_results_url = f"https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/results.csv{cache_buster}"
         df = pd.read_csv(raw_results_url)
      
@@ -35,8 +36,11 @@ def load_and_train_analytics_engine():
         except Exception:
             pass 
 
+        # --- FIX: Clean strings and apply an explicit datetime format mask ---
         df['date'] = df['date'].astype(str).str.strip()
-        df['date'] = pd.to_datetime(df['date'], format='mixed', errors='coerce')
+        
+        # This tells pandas to strictly process your DD-MM-YYYY lines cleanly
+        df['date'] = pd.to_datetime(df['date'], format='%d-%m-%Y', errors='coerce')
         df = df.dropna(subset=['date'])
         
         df['home_team'] = df['home_team'].astype(str).str.strip()
@@ -57,12 +61,10 @@ def load_and_train_analytics_engine():
             
         df = df.sort_values('date').reset_index(drop=True)
 
-        # --- FIX: Coerce scores to numeric and drop unplayed placeholder rows from training ---
         df['home_score'] = pd.to_numeric(df['home_score'], errors='coerce')
         df['away_score'] = pd.to_numeric(df['away_score'], errors='coerce')
         completed_matches = df.dropna(subset=['home_score', 'away_score'])
         
-        # --- TRAIN ELO RATINGS ONLY ON COMPLETED MATCHES ---
         elo_ratings = {}
         k_factor = 32
         for _, row in completed_matches.iterrows():
