@@ -34,13 +34,14 @@ def load_and_train_analytics_engine():
         except Exception:
             pass 
 
-        # --- FIX: Clean strings and apply an explicit datetime format mask ---
         df['date'] = df['date'].astype(str).str.strip()
-        
-        # This tells pandas to strictly process your DD-MM-YYYY lines cleanly
         df['date'] = pd.to_datetime(df['date'], format='%d-%m-%Y', errors='coerce')
         df = df.dropna(subset=['date'])
         
+        df = df[df['date'] >= pd.to_datetime('2000-01-01')].reset_index(drop=True)
+        if shootout_df is not None:
+            shootout_df = shootout_df[shootout_df['date'] >= pd.to_datetime('2000-01-01')].reset_index(drop=True)
+
         df['home_team'] = df['home_team'].astype(str).str.strip()
         df['away_team'] = df['away_team'].astype(str).str.strip()
         df['tournament'] = df['tournament'].astype(str).str.strip()
@@ -116,14 +117,42 @@ def get_official_winner(team_a, team_b, df, shootout_df=None):
                 
     return None
     
-def predict_match_analytics(team_a, team_b, elo_dict):
+def predict_match_analytics(team_a, team_b, elo_dict, df=None):
     if not elo_dict or team_a not in elo_dict or team_b not in elo_dict:
         return 50.0, 50.0
         
     r_a = elo_dict[team_a]
     r_b = elo_dict[team_b]
+  
+    h2h_adjustment = 0.0
+    
+    if df is not None:
+        past_games = df[
+            (df['home_score'].notna()) & (df['away_score'].notna()) & 
+            (((df['home_team'] == team_a) & (df['away_team'] == team_b)) | 
+             ((df['home_team'] == team_b) & (df['away_team'] == team_a)))
+        ]
+        
+        if not past_games.empty:
+            team_a_wins = 0
+            team_b_wins = 0
+            
+            for _, row in past_games.iterrows():
+                if row['home_score'] > row['away_score']:
+                    winner = row['home_team']
+                elif row['away_score'] > row['home_score']:
+                    winner = row['away_team']
+                else:
+                    winner = None
+                    
+                if winner == team_a:
+                    team_a_wins += 1
+                elif winner == team_b:
+                    team_b_wins += 1
+            
+            h2h_adjustment = (team_a_wins - team_b_wins) * 20.0
 
-    prob_a = 1 / (1 + 10 ** ((r_b - r_a) / 400))
+    prob_a = 1 / (1 + 10 ** ((r_b - (r_a + h2h_adjustment)) / 400))
     prob_b = 1 - prob_a
     
     return round(prob_a * 100, 1), round(prob_b * 100, 1)
@@ -185,9 +214,7 @@ def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=N
         
     st.markdown("---")
 
-# ==========================================
 # 3. INTERACTIVE PROCESSOR LAYER
-# ==========================================
 
 if raw_data is not None and master_elo is not None:
     
@@ -216,7 +243,7 @@ if raw_data is not None and master_elo is not None:
 
     r16_picks = {}
 
-    # Match A: Canada vs Ned/Mor
+    # Match A
     st.markdown("### Round of 16: Match A")
     w73 = get_official_winner("South Africa", "Canada", raw_data, shootout_data)
     if w73: t1_a = st.selectbox("Advanced from South Africa vs Canada:", options=[w73], key="r16_a_a_locked")
@@ -232,7 +259,7 @@ if raw_data is not None and master_elo is not None:
     r16_picks["ma_w"] = st.selectbox("Who wins Match A?", options=[t1_a, t1_b], key="winner_match_a")
     st.markdown("---")
 
-    # Match B: Paraguay vs France/Sweden
+    # Match B
     st.markdown("### Round of 16: Match B")
     w75 = get_official_winner("Germany", "Paraguay", raw_data, shootout_data)
     if w75: t2_a = st.selectbox("Advanced from Germany vs Paraguay:", options=[w75], key="r16_b_a_locked")
@@ -248,7 +275,7 @@ if raw_data is not None and master_elo is not None:
     r16_picks["mb_w"] = st.selectbox("Who wins Match B?", options=[t2_a, t2_b], key="winner_match_b")
     st.markdown("---")
 
-    # Match C: Brazil vs Ivory Coast/Norway
+    # Match C
     st.markdown("### Round of 16: Match C")
     w74 = get_official_winner("Brazil", "Japan", raw_data, shootout_data)
     if w74: t3_a = st.selectbox("Advanced from Brazil vs Japan:", options=[w74], key="r16_c_a_locked")
@@ -264,7 +291,7 @@ if raw_data is not None and master_elo is not None:
     r16_picks["mc_w"] = st.selectbox("Who wins Match C?", options=[t3_a, t3_b], key="winner_match_c")
     st.markdown("---")
 
-    # Match D: Mex/Ecu vs Eng/DRC
+    # Match D
     st.markdown("### Round of 16: Match D")
     w79 = get_official_winner("Mexico", "Ecuador", raw_data, shootout_data)
     if w79: t4_a = st.selectbox("Advanced from Mexico vs Ecuador:", options=[w79], key="r16_d_a_locked")
@@ -280,7 +307,7 @@ if raw_data is not None and master_elo is not None:
     r16_picks["md_w"] = st.selectbox("Who wins Match D?", options=[t4_a, t4_b], key="winner_match_d")
     st.markdown("---")
 
-    # Match E: Por/Cro vs Esp/Aut
+    # Match E
     st.markdown("### Round of 16: Match E")
     w84 = get_official_winner("Portugal", "Croatia", raw_data, shootout_data)
     if w84: t5_a = st.selectbox("Advanced from Portugal vs Croatia:", options=[w84], key="r16_e_a_locked")
@@ -296,7 +323,7 @@ if raw_data is not None and master_elo is not None:
     r16_picks["me_w"] = st.selectbox("Who wins Match E?", options=[t5_a, t5_b], key="winner_match_e")
     st.markdown("---")
 
-    # Match F: USA/Bosnia vs Bel/Sen
+    # Match F
     st.markdown("### Round of 16: Match F")
     w82 = get_official_winner("USA", "Bosnia and Herzegovina", raw_data, shootout_data)
     if w82: t6_a = st.selectbox("Advanced from USA vs Bosnia and Herzegovina:", options=[w82], key="r16_f_a_locked")
@@ -312,7 +339,7 @@ if raw_data is not None and master_elo is not None:
     r16_picks["mf_w"] = st.selectbox("Who wins Match F?", options=[t6_a, t6_b], key="winner_match_f")
     st.markdown("---")
 
-    # Match G: Arg/Cpv vs Aus/Egy
+    # Match G
     st.markdown("### Round of 16: Match G")
     w87 = get_official_winner("Argentina", "Cape Verde", raw_data, shootout_data)
     if w87: t7_a = st.selectbox("Advanced from Argentina vs Cape Verde:", options=[w87], key="r16_g_a_locked")
@@ -328,7 +355,7 @@ if raw_data is not None and master_elo is not None:
     r16_picks["mg_w"] = st.selectbox("Who wins Match G?", options=[t7_a, t7_b], key="sel_w_mg")
     st.markdown("---")
 
-    # Match H: Sui/Alg vs Col/Gha
+    # Match H
     st.markdown("### Round of 16: Match H")
     w85 = get_official_winner("Switzerland", "Algeria", raw_data, shootout_data)
     if w85: t8_a = st.selectbox("Advanced from Switzerland vs Algeria:", options=[w85], key="r16_h_a_locked")
