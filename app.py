@@ -27,7 +27,7 @@ def load_and_train_analytics_engine():
         try:
             raw_shootouts_url = f"https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/shootouts.csv{cache_buster}"
             shootout_df = pd.read_csv(raw_shootouts_url)
-            shootout_df['date'] = pd.to_datetime(shootout_df['date'], format='mixed', errors='coerce')
+            shootout_df['date'] = pd.to_datetime(shootout_df['date'], format='%d-%m-%Y', errors='coerce')
             shootout_df['home_team'] = shootout_df['home_team'].astype(str).str.strip()
             shootout_df['away_team'] = shootout_df['away_team'].astype(str).str.strip()
             shootout_df['winner'] = shootout_df['winner'].astype(str).str.strip()
