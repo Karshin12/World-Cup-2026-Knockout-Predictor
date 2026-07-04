@@ -81,13 +81,26 @@ def load_and_train_analytics_engine():
                 
             elo_ratings[h_team] += k_factor * (act_h - exp_h)
             elo_ratings[a_team] += k_factor * (1 - act_h - (1 - exp_h))
+
+        # --- GOALSCORERS INGESTION BLOCK ---
+        scorers_df = None
+        try:
+            raw_scorers_url = f"https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/goalscorers.csv{cache_buster}"
+            scorers_df = pd.read_csv(raw_scorers_url)
+            scorers_df['date'] = pd.to_datetime(scorers_df['date'], format='%Y-%m-%d', errors='coerce')
+            scorers_df['home_team'] = scorers_df['home_team'].astype(str).str.strip().replace(name_mappings)
+            scorers_df['away_team'] = scorers_df['away_team'].astype(str).str.strip().replace(name_mappings)
+            scorers_df['team'] = scorers_df['team'].astype(str).str.strip().replace(name_mappings)
+            scorers_df['scorer'] = scorers_df['scorer'].astype(str).str.strip()
+        except Exception:
+            pass
             
-        return df, elo_ratings, shootout_df
+        return df, elo_ratings, shootout_df, scorers_df
     except Exception as e:
         st.error(f"Analytics Pipeline Error: {e}")
-        return None, None, None
+        return None, None, None, None
         
-raw_data, master_elo, shootout_data = load_and_train_analytics_engine()
+raw_data, master_elo, shootout_data, scorers_data = load_and_train_analytics_engine()
 
 def get_official_winner(team_a, team_b, df, shootout_df=None):
     if df is None: return None
@@ -164,7 +177,83 @@ def display_probability_bar(p_home, p_away, height=18):
     </div>
     """, unsafe_allow_html=True)
 
-def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=None):
+# SCOREBOARD DISPLAY
+def display_custom_match_scoreboard(team_1, team_2, match_row, shootout_df, scorers_df):
+    h_score = int(match_row['home_score'].values[0]) if hasattr(match_row['home_score'], 'values') else int(match_row['home_score'])
+    a_score = int(match_row['away_score'].values[0]) if hasattr(match_row['away_score'], 'values') else int(match_row['away_score'])
+    match_date = match_row['date'].values[0] if hasattr(match_row['date'], 'values') else match_row['date']
+    row_home_team = match_row['home_team'].values[0] if hasattr(match_row['home_team'], 'values') else match_row['home_team']
+
+    if row_home_team == team_1:
+        left_score = h_score
+        right_score = a_score
+    else:
+        left_score = a_score
+        right_score = h_score
+
+    left_pk_text = ""
+    right_pk_text = ""
+    if left_score == right_score and shootout_df is not None:
+        so_match = shootout_df[
+            (((shootout_df['home_team'] == team_1) & (shootout_df['away_team'] == team_2)) | 
+             ((shootout_df['home_team'] == team_2) & (shootout_df['away_team'] == team_1)))
+        ]
+        if not so_match.empty:
+            so_row = so_match.iloc[-1]
+            if so_row['home_team'] == team_1:
+                left_pk_text = f" ({int(so_row['home_pk_score'])})"
+                right_pk_text = f" ({int(so_row['away_pk_score'])})"
+            else:
+                left_pk_text = f" ({int(so_row['away_pk_score'])})"
+                right_pk_text = f" ({int(so_row['home_pk_score'])})"
+
+    left_scorers, right_scorers = {}, {}
+    if scorers_df is not None and not scorers_df.empty:
+        goals = scorers_df[
+            (scorers_df['date'] == match_date) & 
+            (((scorers_df['home_team'] == team_1) & (scorers_df['away_team'] == team_2)) |
+             ((scorers_df['home_team'] == team_2) & (scorers_df['away_team'] == team_1)))
+        ]
+        for _, row in goals.sort_values('minute').iterrows():
+            suffix = ""
+            if str(row['own_goal']).upper() in ['TRUE', '1']: suffix += " (OG)"
+            if str(row['penalty']).upper() in ['TRUE', '1']: suffix += " (P)"
+            time_str = f"{int(row['minute'])}'{suffix}"
+            
+            if row['team'] == team_1:
+                left_scorers[row['scorer']] = left_scorers.get(row['scorer'], []) + [time_str]
+            else:
+                right_scorers[row['scorer']] = right_scorers.get(row['scorer'], []) + [time_str]
+
+    left_goals = [f"{player} {', '.join(times)}" for player, times in left_scorers.items()]
+    right_goals = [f"{player} {', '.join(times)}" for player, times in right_scorers.items()]
+
+    home_scorers_text = "".join([f"<div style='margin-bottom: 2px;'>{g}</div>" for g in left_goals])
+    away_scorers_text = "".join([f"<div style='margin-bottom: 2px;'>{g}</div>" for g in right_goals])
+
+    t1_col1, t1_col2 = st.columns([8, 2])
+    with t1_col1:
+        st.markdown(f"### {team_1}")
+    with t1_col2:
+        st.markdown(f"<span style='font-size: 28px; font-weight: 900;'>{left_score}{left_pk_text}</span>", unsafe_allow_html=True)
+
+    if left_goals:
+        st.markdown(f"<div style='color: #bbbbbb; font-size: 15px; line-height: 1.3;'>{home_scorers_text}</div>", unsafe_allow_html=True)
+        
+    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
+
+    t2_col1, t2_col2 = st.columns([8, 2])
+    with t2_col1:
+        st.markdown(f"### {team_2}")
+    with t2_col2:
+        st.markdown(f"<span style='font-size: 28px; font-weight: 900;'>{right_score}{right_pk_text}</span>", unsafe_allow_html=True)
+        
+    if right_goals:
+        st.markdown(f"<div style='color: #bbbbbb; font-size: 15px; line-height: 1.3;'>{away_scorers_text}</div>", unsafe_allow_html=True)
+
+    st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
+
+def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=None, scorers_df=None):
     st.markdown(f"#### 🏟️ Match {match_num}")
     
     winner = get_official_winner(team_a, team_b, df, shootout_df)
@@ -178,34 +267,10 @@ def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=N
              ((df['home_team'] == team_b) & (df['away_team'] == team_a)))
         ].iloc[-1]
         
-        st.markdown(f"##### **{team_a} vs {team_b}**")
+        display_custom_match_scoreboard(team_a, team_b, match_row, shootout_df, scorers_df)
         
-        score_text = f"{match_row['home_team']} {int(match_row['home_score'])} - {int(match_row['away_score'])} {match_row['away_team']}"
-        winner_display = winner
-        
-        if int(match_row['home_score']) == int(match_row['away_score']):
-            winner_display = f"{winner} (on penalties)"
-            
-            if shootout_df is not None:
-                so_match = shootout_df[
-                    (((shootout_df['home_team'] == team_a) & (shootout_df['away_team'] == team_b)) | 
-                     ((shootout_df['home_team'] == team_b) & (shootout_df['away_team'] == team_a)))
-                ]
-                if not so_match.empty:
-                    so_row = so_match.iloc[-1]
-                    if so_row['home_team'] == match_row['home_team']:
-                        pk_home = int(so_row['home_pk_score'])
-                        pk_away = int(so_row['away_pk_score'])
-                    else:
-                        pk_home = int(so_row['away_pk_score'])
-                        pk_away = int(so_row['home_pk_score'])
-                        
-                    score_text += f" [{pk_home}-{pk_away} on pens]"
-            
-        st.success(
-            f"🏁 **Result:** {score_text}\n\n"
-            f"**{winner_display}** advances to the next round!"
-        )
+        winner_display = winner if int(match_row['home_score']) != int(match_row['away_score']) else f"{winner} (on penalties)"
+        st.success(f"🏆 **{winner_display}** advances to the next round!")
     else:
         p_a, p_b = predict_match_analytics(team_a, team_b, elo_dict)
         st.markdown(f"**{team_a} vs {team_b}**")
@@ -220,22 +285,22 @@ if raw_data is not None and master_elo is not None:
     st.header("Round of 32 Projections")
     st.markdown("---")
 
-    display_r32_match_row(73, "South Africa", "Canada", raw_data, master_elo, shootout_data)
-    display_r32_match_row(74, "Brazil", "Japan", raw_data, master_elo, shootout_data)
-    display_r32_match_row(75, "Germany", "Paraguay", raw_data, master_elo, shootout_data)
-    display_r32_match_row(76, "Netherlands", "Morocco", raw_data, master_elo, shootout_data)
-    display_r32_match_row(77, "Ivory Coast", "Norway", raw_data, master_elo, shootout_data)
-    display_r32_match_row(78, "France", "Sweden", raw_data, master_elo, shootout_data)
-    display_r32_match_row(79, "Mexico", "Ecuador", raw_data, master_elo, shootout_data)
-    display_r32_match_row(80, "England", "DR Congo", raw_data, master_elo, shootout_data)
-    display_r32_match_row(81, "Belgium", "Senegal", raw_data, master_elo, shootout_data)
-    display_r32_match_row(82, "USA", "Bosnia and Herzegovina", raw_data, master_elo, shootout_data)
-    display_r32_match_row(83, "Spain", "Austria", raw_data, master_elo, shootout_data)
-    display_r32_match_row(84, "Portugal", "Croatia", raw_data, master_elo, shootout_data)
-    display_r32_match_row(85, "Switzerland", "Algeria", raw_data, master_elo, shootout_data)
-    display_r32_match_row(86, "Australia", "Egypt", raw_data, master_elo, shootout_data)
-    display_r32_match_row(87, "Argentina", "Cape Verde", raw_data, master_elo, shootout_data)
-    display_r32_match_row(88, "Colombia", "Ghana", raw_data, master_elo, shootout_data)
+    display_r32_match_row(73, "South Africa", "Canada", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(74, "Brazil", "Japan", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(75, "Germany", "Paraguay", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(76, "Netherlands", "Morocco", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(77, "Ivory Coast", "Norway", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(78, "France", "Sweden", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(79, "Mexico", "Ecuador", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(80, "England", "DR Congo", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(81, "Belgium", "Senegal", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(82, "USA", "Bosnia and Herzegovina", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(83, "Spain", "Austria", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(84, "Portugal", "Croatia", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(85, "Switzerland", "Algeria", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(86, "Australia", "Egypt", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(87, "Argentina", "Cape Verde", raw_data, master_elo, shootout_data, scorers_data)
+    display_r32_match_row(88, "Colombia", "Ghana", raw_data, master_elo, shootout_data, scorers_data)
 
     st.header("Round of 16 Projections")
     st.markdown("---")
@@ -284,7 +349,14 @@ if raw_data is not None and master_elo is not None:
         st.markdown(f"### {title}")
         winner = get_official_winner(team_1, team_2, raw_data, shootout_data)
         if winner:
-            st.success(f"🏁 **Winner:** {winner} has advanced to the Quarterfinals!")
+            knockout_start = pd.to_datetime('2026-06-20')
+            match_row = raw_data[
+                (raw_data['tournament'] == 'FIFA World Cup') & 
+                (raw_data['date'] >= knockout_start) &  
+                (((raw_data['home_team'] == team_1) & (raw_data['away_team'] == team_2)) | 
+                 ((raw_data['home_team'] == team_2) & (raw_data['away_team'] == team_1)))
+            ].iloc[-1]
+            display_custom_match_scoreboard(team_1, team_2, match_row, shootout_data, scorers_data)
             return winner
         else:
             p1, p2 = predict_match_analytics(team_1, team_2, master_elo, raw_data)
@@ -310,11 +382,9 @@ if raw_data is not None and master_elo is not None:
     def render_clean_interactive_qf(title, parent_w1, parent_w2, opt_list1, opt_list2, m1_label, m2_label, key_suffix):
         st.markdown(f"### {title}")
         
-        # Determine if parent matches are official
         is_parent1_official = get_official_winner(opt_list1[0], opt_list1[1], raw_data, shootout_data) is not None
         is_parent2_official = get_official_winner(opt_list2[0], opt_list2[1], raw_data, shootout_data) is not None
         
-        # Dynamic label assignment based on status
         lbl1 = f"Winner from {m1_label}" if is_parent1_official else f"Pick from {m1_label}"
         lbl2 = f"Winner from {m2_label}" if is_parent2_official else f"Pick from {m2_label}"
         
@@ -330,8 +400,14 @@ if raw_data is not None and master_elo is not None:
             
         winner = get_official_winner(team_1, team_2, raw_data, shootout_data)
         if winner:
-            st.success(f"🏁 **Winner:** {winner} has advanced to the Semifinals!")
-            st.markdown("---")
+            knockout_start = pd.to_datetime('2026-06-20')
+            match_row = raw_data[
+                (raw_data['tournament'] == 'FIFA World Cup') & 
+                (raw_data['date'] >= knockout_start) &  
+                (((raw_data['home_team'] == team_1) & (raw_data['away_team'] == team_2)) | 
+                 ((raw_data['home_team'] == team_2) & (raw_data['away_team'] == team_1)))
+            ].iloc[-1]
+            display_custom_match_scoreboard(team_1, team_2, match_row, shootout_data, scorers_data)
             return winner
         else:
             p1, p2 = predict_match_analytics(team_1, team_2, master_elo, raw_data)
@@ -370,7 +446,14 @@ if raw_data is not None and master_elo is not None:
 
     sf1_winner = get_official_winner(s1_a, s1_b, raw_data, shootout_data)
     if sf1_winner:
-        st.success(f"🏁 **Winner:** {sf1_winner} has advanced to the Grand Final!")
+        knockout_start = pd.to_datetime('2026-06-20')
+        match_row = raw_data[
+            (raw_data['tournament'] == 'FIFA World Cup') & 
+            (raw_data['date'] >= knockout_start) &  
+            (((raw_data['home_team'] == s1_a) & (raw_data['away_team'] == s1_b)) | 
+             ((raw_data['home_team'] == s1_b) & (raw_data['away_team'] == s1_a)))
+        ].iloc[-1]
+        display_custom_match_scoreboard(s1_a, s1_b, match_row, shootout_data, scorers_data)
         f_a = sf1_winner
         sf1_loser = s1_b if sf1_winner == s1_a else s1_a
     else:
@@ -379,7 +462,6 @@ if raw_data is not None and master_elo is not None:
         st.write(f" 📊 **Prediction:** {s1_a}: **{ps1}%** | {s1_b}: **{ps2}%**")
         display_probability_bar(ps1, ps2)
         
-        # FIX: Add a manual dropbox to pick the winner if the game isn't officially played yet
         predicted_winner_sf1 = s1_a if ps1 >= ps2 else s1_b
         sf1_user_pick = st.selectbox(f"Who makes it to the Final?", [s1_a, s1_b], index=[s1_a, s1_b].index(predicted_winner_sf1), key="sf1_user_pick_winner")
         
@@ -407,7 +489,14 @@ if raw_data is not None and master_elo is not None:
 
     sf2_winner = get_official_winner(s2_a, s2_b, raw_data, shootout_data)
     if sf2_winner:
-        st.success(f"🏁 **Winner:** {sf2_winner} has advanced to the Grand Final!")
+        knockout_start = pd.to_datetime('2026-06-20')
+        match_row = raw_data[
+            (raw_data['tournament'] == 'FIFA World Cup') & 
+            (raw_data['date'] >= knockout_start) &  
+            (((raw_data['home_team'] == s2_a) & (raw_data['away_team'] == s2_b)) | 
+             ((raw_data['home_team'] == s2_b) & (raw_data['away_team'] == s2_a)))
+        ].iloc[-1]
+        display_custom_match_scoreboard(s2_a, s2_b, match_row, shootout_data, scorers_data)
         f_b = sf2_winner
         sf2_loser = s2_b if sf2_winner == s2_a else s2_a
     else:
@@ -416,7 +505,6 @@ if raw_data is not None and master_elo is not None:
         st.write(f"📊 **Prediction:** {s2_a}: **{ps3}%** | {s2_b}: **{ps4}%**")
         display_probability_bar(ps3, ps4)
         
-        # FIX: Add a manual dropbox to pick the winner if the game isn't officially played yet
         predicted_winner_sf2 = s2_a if ps3 >= ps4 else s2_b
         sf2_user_pick = st.selectbox(f"Who makes it to the Final?", [s2_a, s2_b], index=[s2_a, s2_b].index(predicted_winner_sf2), key="sf2_user_pick_winner")
         
@@ -428,7 +516,14 @@ if raw_data is not None and master_elo is not None:
     st.markdown("### 🥉 Third Place Playoff")
     bronze_winner = get_official_winner(sf1_loser, sf2_loser, raw_data, shootout_data)
     if bronze_winner:
-        st.success(f"🥉 **Third Place:** {bronze_winner} secured the bronze medal!")
+        knockout_start = pd.to_datetime('2026-06-20')
+        match_row = raw_data[
+            (raw_data['tournament'] == 'FIFA World Cup') & 
+            (raw_data['date'] >= knockout_start) &  
+            (((raw_data['home_team'] == sf1_loser) & (raw_data['away_team'] == sf2_loser)) | 
+             ((raw_data['home_team'] == sf2_loser) & (raw_data['away_team'] == sf1_loser)))
+        ].iloc[-1]
+        display_custom_match_scoreboard(sf1_loser, sf2_loser, match_row, shootout_data, scorers_data)
     else:
         p_tp1, p_tp2 = predict_match_analytics(sf1_loser, sf2_loser, master_elo, raw_data)
         st.markdown(f"#### {sf1_loser} vs {sf2_loser}")
@@ -443,6 +538,14 @@ if raw_data is not None and master_elo is not None:
     
     champion = get_official_winner(f_a, f_b, raw_data, shootout_data)
     if champion:
+        knockout_start = pd.to_datetime('2026-06-20')
+        match_row = raw_data[
+            (raw_data['tournament'] == 'FIFA World Cup') & 
+            (raw_data['date'] >= knockout_start) &  
+            (((raw_data['home_team'] == f_a) & (raw_data['away_team'] == f_b)) | 
+             ((raw_data['home_team'] == f_b) & (raw_data['away_team'] == f_a)))
+        ].iloc[-1]
+        display_custom_match_scoreboard(f_a, f_b, match_row, shootout_data, scorers_data)
         st.balloons()
         st.success(f"🏆 **CHAMPIONS:** {champion} has won the 2026 FIFA World Cup!")
     else:
@@ -453,4 +556,4 @@ if raw_data is not None and master_elo is not None:
         
         higher_team = f_a if final_1 >= final_2 else f_b
         lower_team = f_b if final_1 >= final_2 else f_a
-        st.info(f"🔮 **{higher_team}** is projected to edge out **{lower_team}** to clinch the World Cup!")
+        st.info(f"🔮 **{higher_team}** is projected to edge out **{lower_team}** to capture the World Cup!")
