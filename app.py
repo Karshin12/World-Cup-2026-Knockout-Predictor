@@ -178,7 +178,7 @@ def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=N
              ((df['home_team'] == team_b) & (df['away_team'] == team_a)))
         ].iloc[-1]
         
-        st.markdown(f"**{team_a} vs {team_b}**")
+        st.markdown(f"##### **{team_a} vs {team_b}**")
         
         score_text = f"{match_row['home_team']} {int(match_row['home_score'])} - {int(match_row['away_score'])} {match_row['away_team']}"
         winner_display = winner
@@ -288,7 +288,7 @@ if raw_data is not None and master_elo is not None:
             return winner
         else:
             p1, p2 = predict_match_analytics(team_1, team_2, master_elo, raw_data)
-            st.markdown(f"**{team_1} vs {team_2}**")
+            st.markdown(f"##### **{team_1} vs {team_2}**")
             st.write(f"🔮 **Prediction:** {team_1}: **{p1}%** | {team_2}: **{p2}%**")
             display_probability_bar(p1, p2)
             return team_1 if p1 >= p2 else team_2
@@ -335,7 +335,7 @@ if raw_data is not None and master_elo is not None:
             return winner
         else:
             p1, p2 = predict_match_analytics(team_1, team_2, master_elo, raw_data)
-            st.markdown(f"**{team_1} vs {team_2}**")
+            st.markdown(f"##### **{team_1} vs {team_2}**")
             st.write(f"🔮 **Prediction:** {team_1}: **{p1}%** | {team_2}: **{p2}%**")
             display_probability_bar(p1, p2)
             st.markdown("---")
@@ -375,10 +375,15 @@ if raw_data is not None and master_elo is not None:
         sf1_loser = s1_b if sf1_winner == s1_a else s1_a
     else:
         ps1, ps2 = predict_match_analytics(s1_a, s1_b, master_elo, raw_data)
-        st.markdown(f"**{s1_a} vs {s1_b}**")
-        st.write(f"📊 **Prediction:** {s1_a}: **{ps1}%** | {s1_b}: **{ps2}%**")
+        st.markdown(f"#### {s1_a} vs {s1_b}")
+        st.write(f" 📊 **Prediction:** {s1_a}: **{ps1}%** | {s1_b}: **{ps2}%**")
         display_probability_bar(ps1, ps2)
-        f_a = s1_a if ps1 >= ps2 else s1_b
+        
+        # FIX: Add a manual dropbox to pick the winner if the game isn't officially played yet
+        predicted_winner_sf1 = s1_a if ps1 >= ps2 else s1_b
+        sf1_user_pick = st.selectbox(f"Who makes it to the Final?", [s1_a, s1_b], index=[s1_a, s1_b].index(predicted_winner_sf1), key="sf1_user_pick_winner")
+        
+        f_a = sf1_user_pick
         sf1_loser = s1_b if f_a == s1_a else s1_a
     st.markdown("---")
 
@@ -407,10 +412,15 @@ if raw_data is not None and master_elo is not None:
         sf2_loser = s2_b if sf2_winner == s2_a else s2_a
     else:
         ps3, ps4 = predict_match_analytics(s2_a, s2_b, master_elo, raw_data)
-        st.markdown(f"**{s2_a} vs {s2_b}**")
+        st.markdown(f"#### {s2_a} vs {s2_b}")
         st.write(f"📊 **Prediction:** {s2_a}: **{ps3}%** | {s2_b}: **{ps4}%**")
         display_probability_bar(ps3, ps4)
-        f_b = s2_a if ps3 >= ps4 else s2_b
+        
+        # FIX: Add a manual dropbox to pick the winner if the game isn't officially played yet
+        predicted_winner_sf2 = s2_a if ps3 >= ps4 else s2_b
+        sf2_user_pick = st.selectbox(f"Who makes it to the Final?", [s2_a, s2_b], index=[s2_a, s2_b].index(predicted_winner_sf2), key="sf2_user_pick_winner")
+        
+        f_b = sf2_user_pick
         sf2_loser = s2_b if f_b == s2_a else s2_a
     st.markdown("---")
 
@@ -421,7 +431,7 @@ if raw_data is not None and master_elo is not None:
         st.success(f"🥉 **Third Place:** {bronze_winner} secured the bronze medal!")
     else:
         p_tp1, p_tp2 = predict_match_analytics(sf1_loser, sf2_loser, master_elo, raw_data)
-        st.markdown(f"**{sf1_loser} vs {sf2_loser}**")
+        st.markdown(f"#### {sf1_loser} vs {sf2_loser}")
         st.write(f"📊 **Prediction:** {sf1_loser}: **{p_tp1}%** | {sf2_loser}: **{p_tp2}%**")
         display_probability_bar(p_tp1, p_tp2)
     st.markdown("---")
@@ -436,7 +446,7 @@ if raw_data is not None and master_elo is not None:
         st.balloons()
         st.success(f"🏆 **CHAMPIONS:** {champion} has won the 2026 FIFA World Cup!")
     else:
-        st.write(f"🏆 **{f_a} vs {f_b}**")
+        st.markdown(f"### 🏆 {f_a} vs {f_b}")
         final_1, final_2 = predict_match_analytics(f_a, f_b, master_elo, raw_data)
         st.write(f"📊 {f_a}: **{final_1}%** | {f_b}: **{final_2}%**")
         display_probability_bar(final_1, final_2, height=28)
