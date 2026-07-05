@@ -207,23 +207,51 @@ def display_custom_match_scoreboard(team_1, team_2, match_row, shootout_df, scor
                 left_pk_text = f" ({int(so_row['away_pk_score'])})"
                 right_pk_text = f" ({int(so_row['home_pk_score'])})"
 
-    left_scorers, right_scorers = {}, {}
+    # --- Process, Parse and Sort Scorers Safely ---
+    processed_goals = []
     if scorers_df is not None and not scorers_df.empty:
         goals = scorers_df[
             (scorers_df['date'] == match_date) & 
             (((scorers_df['home_team'] == team_1) & (scorers_df['away_team'] == team_2)) |
              ((scorers_df['home_team'] == team_2) & (scorers_df['away_team'] == team_1)))
         ]
-        for _, row in goals.sort_values('minute').iterrows():
+        
+        for _, row in goals.iterrows():
             suffix = ""
             if str(row['own_goal']).upper() in ['TRUE', '1']: suffix += " (OG)"
             if str(row['penalty']).upper() in ['TRUE', '1']: suffix += " (P)"
-            time_str = f"{int(row['minute'])}'{suffix}"
             
-            if row['team'] == team_1:
-                left_scorers[row['scorer']] = left_scorers.get(row['scorer'], []) + [time_str]
+            raw_min = str(row['minute']).strip()
+            
+            # Handle stoppage time format safely (e.g., '90+2')
+            if '+' in raw_min:
+                try:
+                    base_min, extra_min = raw_min.split('+')
+                    sort_minute = int(base_min) + int(extra_min)
+                except ValueError:
+                    sort_minute = 90
             else:
-                right_scorers[row['scorer']] = right_scorers.get(row['scorer'], []) + [time_str]
+                try:
+                    sort_minute = int(float(raw_min))
+                except ValueError:
+                    sort_minute = 0
+            
+            processed_goals.append({
+                'sort_minute': sort_minute,
+                'team': row['team'],
+                'scorer': row['scorer'],
+                'display_time': f"{raw_min}'{suffix}"
+            })
+
+    # Sort goals chronologically behind the scenes
+    sorted_goals = sorted(processed_goals, key=lambda x: x['sort_minute'])
+
+    left_scorers, right_scorers = {}, {}
+    for g in sorted_goals:
+        if g['team'] == team_1:
+            left_scorers[g['scorer']] = left_scorers.get(g['scorer'], []) + [g['display_time']]
+        else:
+            right_scorers[g['scorer']] = right_scorers.get(g['scorer'], []) + [g['display_time']]
 
     left_goals = [f"{player} {', '.join(times)}" for player, times in left_scorers.items()]
     right_goals = [f"{player} {', '.join(times)}" for player, times in right_scorers.items()]
@@ -357,6 +385,8 @@ if raw_data is not None and master_elo is not None:
                  ((raw_data['home_team'] == team_2) & (raw_data['away_team'] == team_1)))
             ].iloc[-1]
             display_custom_match_scoreboard(team_1, team_2, match_row, shootout_data, scorers_data)
+            winner_display = winner if int(match_row['home_score']) != int(match_row['away_score']) else f"{winner} (on penalties)"
+            st.success(f"🏆 **{winner_display}** advances to the next round!")
             return winner
         else:
             p1, p2 = predict_match_analytics(team_1, team_2, master_elo, raw_data)
