@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
+# 1. INITIAL SETUP & CONFIGURATION
 st.set_page_config(
     page_title="World Cup 2026 Knockout Predictor",
     page_icon="⚽",
@@ -171,13 +172,15 @@ def predict_match_analytics(team_a, team_b, elo_dict, df=None):
     return round(prob_a * 100, 1), round(prob_b * 100, 1)
 
 def display_probability_bar(p_home, p_away, height=18):
+    # Fixed literal percentage conversion to shield it from Streamlit parsing limitations
+    p_home_pct = f"{int(p_home)}%"
     st.markdown(f"""
     <div style="background-color: #ef4444; border-radius: 6px; height: {height}px; width: 100%; overflow: hidden; display: flex; margin-top: 8px; margin-bottom: 8px;">
-        <div style="background-color: #3b82f6; width: {int(p_home)}%; height: 100%;"></div>
+        <div style="background-color: #3b82f6; width: {p_home_pct}; height: 100%;"></div>
     </div>
     """, unsafe_allow_html=True)
 
-# SCOREBOARD DISPLAY
+# 3. SCOREBOARD DISPLAY (CLEANED, VERTICAL FLUSH-LEFT LOOK)
 def display_custom_match_scoreboard(team_1, team_2, match_row, shootout_df, scorers_df):
     h_score = int(match_row['home_score'].values[0]) if hasattr(match_row['home_score'], 'values') else int(match_row['home_score'])
     a_score = int(match_row['away_score'].values[0]) if hasattr(match_row['away_score'], 'values') else int(match_row['away_score'])
@@ -259,6 +262,7 @@ def display_custom_match_scoreboard(team_1, team_2, match_row, shootout_df, scor
     home_scorers_text = "".join([f"<div style='margin-bottom: 2px;'>{g}</div>" for g in left_goals])
     away_scorers_text = "".join([f"<div style='margin-bottom: 2px;'>{g}</div>" for g in right_goals])
 
+    # Team 1 Block
     t1_col1, t1_col2 = st.columns([8, 2])
     with t1_col1:
         st.markdown(f"### {team_1}")
@@ -270,6 +274,7 @@ def display_custom_match_scoreboard(team_1, team_2, match_row, shootout_df, scor
         
     st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
 
+    # Team 2 Block
     t2_col1, t2_col2 = st.columns([8, 2])
     with t2_col1:
         st.markdown(f"### {team_2}")
@@ -280,6 +285,7 @@ def display_custom_match_scoreboard(team_1, team_2, match_row, shootout_df, scor
         st.markdown(f"<div style='color: #bbbbbb; font-size: 15px; line-height: 1.3;'>{away_scorers_text}</div>", unsafe_allow_html=True)
 
     st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
+
 
 def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=None, scorers_df=None):
     st.markdown(f"#### 🏟️ Match {match_num}")
@@ -308,6 +314,7 @@ def display_r32_match_row(match_num, team_a, team_b, df, elo_dict, shootout_df=N
     st.markdown("---")
 
 
+# 4. BRACKET GENERATION ENGINE
 if raw_data is not None and master_elo is not None:
     
     st.header("Round of 32 Projections")
