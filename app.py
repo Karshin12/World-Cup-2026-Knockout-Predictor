@@ -15,7 +15,7 @@ st.markdown("---")
 
 # 2. DATA INGESTION
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=59)
 def load_and_train_analytics_engine():
     try:
         import time
