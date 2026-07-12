@@ -446,7 +446,7 @@ if raw_data is not None and master_elo is not None:
             ].iloc[-1]
             display_custom_match_scoreboard(team_1, team_2, match_row, shootout_data, scorers_data)
             winner_display = winner if int(match_row['home_score']) != int(match_row['away_score']) else f"{winner} (on penalties)"
-            st.success(f"🏆 **{winner_display}** advances to the semis!")
+            st.success(f"🏆 **{winner_display}** move on to the semis!")
             return winner
         else:
             p1, p2 = predict_match_analytics(team_1, team_2, master_elo, raw_data)
@@ -494,7 +494,7 @@ if raw_data is not None and master_elo is not None:
         ].iloc[-1]
         display_custom_match_scoreboard(s1_a, s1_b, match_row, shootout_data, scorers_data)
         winner_display = sf1_winner if int(match_row['home_score']) != int(match_row['away_score']) else f"{sf1_winner} (on penalties)"
-        st.success(f"🏆 **{winner_display}** head to the World Cup Final!")
+        st.success(f"🏆 **{winner_display}** are through to the World Cup Final!")
         f_a = sf1_winner
         sf1_loser = s1_b if sf1_winner == s1_a else s1_a
     else:
@@ -539,7 +539,7 @@ if raw_data is not None and master_elo is not None:
         ].iloc[-1]
         display_custom_match_scoreboard(s2_a, s2_b, match_row, shootout_data, scorers_data)
         winner_display = sf1_winner if int(match_row['home_score']) != int(match_row['away_score']) else f"{sf1_winner} (on penalties)"
-        st.success(f"🏆 **{winner_display}** head to the World Cup Final!")
+        st.success(f"🏆 **{winner_display}** are through to the World Cup Final!")
         f_b = sf2_winner
         sf2_loser = s2_b if sf2_winner == s2_a else s2_a
     else:
