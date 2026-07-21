@@ -538,7 +538,7 @@ if raw_data is not None and master_elo is not None:
              ((raw_data['home_team'] == s2_b) & (raw_data['away_team'] == s2_a)))
         ].iloc[-1]
         display_custom_match_scoreboard(s2_a, s2_b, match_row, shootout_data, scorers_data)
-        winner_display = sf1_winner if int(match_row['home_score']) != int(match_row['away_score']) else f"{sf1_winner} (on penalties)"
+        winner_display = sf2_winner if int(match_row['home_score']) != int(match_row['away_score']) else f"{sf2_winner} (on penalties)"
         st.success(f"🏆 **{winner_display}** are through to the World Cup Final!")
         f_b = sf2_winner
         sf2_loser = s2_b if sf2_winner == s2_a else s2_a
@@ -567,7 +567,7 @@ if raw_data is not None and master_elo is not None:
              ((raw_data['home_team'] == sf2_loser) & (raw_data['away_team'] == sf1_loser)))
         ].iloc[-1]
         display_custom_match_scoreboard(sf1_loser, sf2_loser, match_row, shootout_data, scorers_data)
-        winner_display = sf1_winner if int(match_row['home_score']) != int(match_row['away_score']) else f"{sf1_winner} (on penalties)"
+        winner_display = bronze_winner if int(match_row['home_score']) != int(match_row['away_score']) else f"{bronze_winner} (on penalties)"
         st.success(f"🏆 **{winner_display}** takes 3rd place!")
     else:
         p_tp1, p_tp2 = predict_match_analytics(sf1_loser, sf2_loser, master_elo, raw_data)
@@ -577,28 +577,45 @@ if raw_data is not None and master_elo is not None:
     st.markdown("---")
 
     # --- The Grand Final Showdown ---
-    st.header("FIFA World Cup 2026 Final")
-    st.markdown("---")
-    st.markdown("### 🥇 The Final Showdown")
+st.header("FIFA World Cup 2026 Final")
+st.markdown("---")
+st.markdown("### 🥇 The Final Showdown")
+
+champion = get_official_winner(f_a, f_b, raw_data, shootout_data)
+if champion:
+    knockout_start = pd.to_datetime('2026-06-20')
+    match_row = raw_data[
+        (raw_data['tournament'] == 'FIFA World Cup') & 
+        (raw_data['date'] >= knockout_start) &  
+        (((raw_data['home_team'] == f_a) & (raw_data['away_team'] == f_b)) | 
+         ((raw_data['home_team'] == f_b) & (raw_data['away_team'] == f_a)))
+    ].iloc[-1]
     
-    champion = get_official_winner(f_a, f_b, raw_data, shootout_data)
-    if champion:
-        knockout_start = pd.to_datetime('2026-06-20')
-        match_row = raw_data[
-            (raw_data['tournament'] == 'FIFA World Cup') & 
-            (raw_data['date'] >= knockout_start) &  
-            (((raw_data['home_team'] == f_a) & (raw_data['away_team'] == f_b)) | 
-             ((raw_data['home_team'] == f_b) & (raw_data['away_team'] == f_a)))
-        ].iloc[-1]
-        display_custom_match_scoreboard(f_a, f_b, match_row, shootout_data, scorers_data)
-        st.balloons()
-        st.success(f"🏆 **CHAMPIONS:** {champion} has won the 2026 FIFA World Cup!")
-    else:
-        st.markdown(f"### 🏆 {f_a} vs {f_b}")
-        final_1, final_2 = predict_match_analytics(f_a, f_b, master_elo, raw_data)
-        st.write(f"📊 {f_a}: **{final_1}%** | {f_b}: **{final_2}%**")
-        display_probability_bar(final_1, final_2, height=28)
-        
-        higher_team = f_a if final_1 >= final_2 else f_b
-        lower_team = f_b if final_1 >= final_2 else f_a
-        st.info(f"🔮 **{higher_team}** is projected to edge out **{lower_team}** to clinch the FIFA World Cup!")
+    display_custom_match_scoreboard(f_a, f_b, match_row, shootout_data, scorers_data)
+    
+    winner_display = champion if int(match_row['home_score']) != int(match_row['away_score']) else f"{champion} (on penalties)"
+    st.success(f"🏆 **CHAMPIONS:** {winner_display} has won the 2026 FIFA World Cup!")
+    
+    st.markdown("<div id='bottom-anchor'></div>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <img src="x" onerror="
+            let anchor = window.parent.document.getElementById('bottom-anchor');
+            if (anchor) {
+                anchor.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+        " style="display:none;"/>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    st.balloons()
+else:
+    st.markdown(f"### 🏆 {f_a} vs {f_b}")
+    final_1, final_2 = predict_match_analytics(f_a, f_b, master_elo, raw_data)
+    st.write(f"📊 {f_a}: **{final_1}%** | {f_b}: **{final_2}%**")
+    display_probability_bar(final_1, final_2, height=28)
+    
+    higher_team = f_a if final_1 >= final_2 else f_b
+    lower_team = f_b if final_1 >= final_2 else f_a
+    st.info(f"🔮 **{higher_team}** is projected to edge out **{lower_team}** to clinch the FIFA World Cup!")
