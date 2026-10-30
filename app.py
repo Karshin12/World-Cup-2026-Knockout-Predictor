@@ -225,7 +225,7 @@ def display_custom_match_scoreboard(team_1, team_2, match_row, shootout_df, scor
             if str(row['penalty']).upper() in ['TRUE', '1']: suffix += " (P)"
             
             raw_min = str(row['minute']).strip()
-            if raw_min.endswith(' .0'):
+            if raw_min.endswith('.0'):
                 raw_min = raw_min[:-2]
             
             # Handle stoppage time format safely (e.g., '90+2')
