@@ -28,7 +28,7 @@ def load_and_train_analytics_engine():
         try:
             raw_shootouts_url = f"https://raw.githubusercontent.com/martj42/international_results/master/shootouts.csv{cache_buster}"
             shootout_df = pd.read_csv(raw_shootouts_url)
-            shootout_df['date'] = pd.to_datetime(shootout_df['date'], format='%d-%m-%Y', errors='coerce')
+            shootout_df['date'] = pd.to_datetime(shootout_df['date'], format='%Y-%m-%d', errors='coerce')
             shootout_df['home_team'] = shootout_df['home_team'].astype(str).str.strip()
             shootout_df['away_team'] = shootout_df['away_team'].astype(str).str.strip()
             shootout_df['winner'] = shootout_df['winner'].astype(str).str.strip()
@@ -36,7 +36,7 @@ def load_and_train_analytics_engine():
             pass 
 
         df['date'] = df['date'].astype(str).str.strip()
-        df['date'] = pd.to_datetime(df['date'], format='%d-%m-%Y', errors='coerce')
+        df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d', errors='coerce')
         df = df.dropna(subset=['date'])
         
         df = df[df['date'] >= pd.to_datetime('2000-01-01')].reset_index(drop=True)
