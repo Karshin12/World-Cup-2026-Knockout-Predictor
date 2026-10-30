@@ -203,12 +203,12 @@ def display_custom_match_scoreboard(team_1, team_2, match_row, shootout_df, scor
         ]
         if not so_match.empty:
             so_row = so_match.iloc[-1]
-            if so_row['home_team'] == team_1:
-                left_pk_text = f" ({int(so_row['home_pk_score'])})"
-                right_pk_text = f" ({int(so_row['away_pk_score'])})"
-            else:
-                left_pk_text = f" ({int(so_row['away_pk_score'])})"
-                right_pk_text = f" ({int(so_row['home_pk_score'])})"
+            shootout_winner = so_row['winner']
+
+            if shootout_winner == team_1:
+                left_pk_text = " (won on pens)"
+            elif shootout_winner == team_2:
+                  right_pk_text = " (won on pens)"
 
     # --- Process, Parse and Sort Scorers Safely ---
     processed_goals = []
