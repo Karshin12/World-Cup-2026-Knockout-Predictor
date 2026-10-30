@@ -21,12 +21,12 @@ def load_and_train_analytics_engine():
         import time
         cache_buster = f"?v={int(time.time())}"
         
-        raw_results_url = f"https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/results.csv{cache_buster}"
+        raw_results_url = f"https://raw.githubusercontent.com/martj42/international_results/master/results.csv{cache_buster}"
         df = pd.read_csv(raw_results_url)
      
         shootout_df = None
         try:
-            raw_shootouts_url = f"https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/shootouts.csv{cache_buster}"
+            raw_shootouts_url = f"https://raw.githubusercontent.com/martj42/international_results/master/shootouts.csv{cache_buster}"
             shootout_df = pd.read_csv(raw_shootouts_url)
             shootout_df['date'] = pd.to_datetime(shootout_df['date'], format='%d-%m-%Y', errors='coerce')
             shootout_df['home_team'] = shootout_df['home_team'].astype(str).str.strip()
@@ -86,7 +86,7 @@ def load_and_train_analytics_engine():
         # --- GOALSCORERS INGESTION BLOCK ---
         scorers_df = None
         try:
-            raw_scorers_url = f"https://raw.githubusercontent.com/Karshin12/World-Cup-2026-Knockout-Predictor/main/goalscorers.csv{cache_buster}"
+            raw_scorers_url = f"https://raw.githubusercontent.com/martj42/international_results/master/goalscorers.csv{cache_buster}"
             scorers_df = pd.read_csv(raw_scorers_url)
             scorers_df['date'] = pd.to_datetime(scorers_df['date'], format='%Y-%m-%d', errors='coerce')
             scorers_df['home_team'] = scorers_df['home_team'].astype(str).str.strip().replace(name_mappings)
